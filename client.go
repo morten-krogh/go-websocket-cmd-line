@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"golang.org/x/net/websocket"
 	"log"
-	//	"os"
 )
 
 func client(wsUri string) {
@@ -25,6 +24,10 @@ func client(wsUri string) {
 
 	fmt.Printf("The web socket is connected to %s\n", wsUri)
 
+	typeMsg := "Type a message to send on the websocket and press return\n"
+	
+	println(typeMsg)
+	
 	wsReaderChan := make(chan []byte)
 
 	go wsReader(ws, wsReaderChan)
@@ -36,33 +39,17 @@ func client(wsUri string) {
 	for {
 		select {
 		case stdinMsg := <-stdinReaderChan:
-			print("stdin: ", stdinMsg)
+			_, err = ws.Write([]byte(stdinMsg))
+			if err != nil {
+				println("\nError sending message to the websocket server")
+			} else {
+				println("\nMessage sent to the websocket server")
+			}
+			println(typeMsg)
+		case wsMsg := <- wsReaderChan:
+			println("The server replied:\n ")
+			println(string(wsMsg))
+			println(typeMsg)
 		}
 	}
-
-	/*
-		for {
-			fmt.Print("\nMessage: ")
-
-			line, err := inputReader.ReadString('\n')
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			_, err = ws.Write([]byte(line))
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			msg := make([]byte, 512)
-
-			n, err := ws.Read(msg)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			fmt.Printf("Reply: %s", msg[:n])
-		}
-
-	*/
 }
