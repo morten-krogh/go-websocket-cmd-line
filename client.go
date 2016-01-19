@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bufio"
+	//	"bufio"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"log"
-	"os"
+	//	"os"
 )
 
 func client(wsUri string) {
@@ -25,28 +25,44 @@ func client(wsUri string) {
 
 	fmt.Printf("The web socket is connected to %s\n", wsUri)
 
-	inputReader := bufio.NewReader(os.Stdin)
+	wsReaderChan := make(chan []byte)
+
+	go wsReader(ws, wsReaderChan)
+
+	stdinReaderChan := make(chan string)
+
+	go stdinReader(stdinReaderChan)
 
 	for {
-		fmt.Print("\nMessage: ")
-
-		line, err := inputReader.ReadString('\n')
-		if err != nil {
-			log.Fatal(err)
+		select {
+		case stdinMsg := <-stdinReaderChan:
+			print("stdin: ", stdinMsg)
 		}
-
-		_, err = ws.Write([]byte(line))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		msg := make([]byte, 512)
-
-		n, err := ws.Read(msg)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("Reply: %s", msg[:n])
 	}
+
+	/*
+		for {
+			fmt.Print("\nMessage: ")
+
+			line, err := inputReader.ReadString('\n')
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			_, err = ws.Write([]byte(line))
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			msg := make([]byte, 512)
+
+			n, err := ws.Read(msg)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Printf("Reply: %s", msg[:n])
+		}
+
+	*/
 }
