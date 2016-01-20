@@ -3,12 +3,38 @@ package main
 import (
 	//	"bufio"
 	"fmt"
+	"net/http"
 	"golang.org/x/net/websocket"
 	"log"
+	"os"
 )
 
-func client(wsUri string) {
+func handShake(config *websocket.Config, request *http.Request) error {
 
+	fmt.Print("handshaek\n")
+	return nil
+}
+
+func server(port string) {
+
+	fmt.Printf("server : %s\n", port)
+	os.Exit(0)
+
+
+	var wsServer websocket.Server
+	wsServer.Handshake = handShake
+	
+
+	var httpServer http.Server 
+	httpServer.Addr = ":" + port
+	httpServer.Handler = wsServer
+	err := httpServer.ListenAndServe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Web socket is listening on port %s\n", port)	
+	
+	/*
 	origin := "http://localhost/"
 
 	config, err := websocket.NewConfig(wsUri, origin)
@@ -22,7 +48,7 @@ func client(wsUri string) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("The web socket is connected to %s\n", wsUri)
+
 
 	typeMsg := "Type a message to send on the websocket and press return\n"
 	
@@ -42,14 +68,16 @@ func client(wsUri string) {
 			_, err = ws.Write([]byte(stdinMsg))
 			if err != nil {
 				println("\nError sending message to the websocket server")
-				println(typeMsg)
 			} else {
 				println("\nMessage sent to the websocket server")
 			}
+			println(typeMsg)
 		case wsMsg := <- wsReaderChan:
 			println("The server replied:\n ")
 			println(string(wsMsg))
 			println(typeMsg)
 		}
 	}
+
+*/
 }
