@@ -29,11 +29,9 @@ func client(wsUri string) {
 	println(typeMsg)
 	
 	wsReaderChan := make(chan []byte)
-
-	go wsReader(ws, wsReaderChan)
+	go wsReaderClient(ws, wsReaderChan)
 
 	stdinReaderChan := make(chan string)
-
 	go stdinReader(stdinReaderChan)
 
 	for {
