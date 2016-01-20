@@ -2,12 +2,11 @@ package main
 
 import (
 	"bufio"
-//	"fmt"
 	"log"
 	"os"
 )
 
-func stdinReader(c chan string) {
+func stdinReader(inputChan chan string) {
 
 	inputReader := bufio.NewReader(os.Stdin)
 
@@ -17,6 +16,6 @@ func stdinReader(c chan string) {
 			log.Fatal(err)
 		}
 
-		c <- line
+		inputChan <- line
 	}
 }
