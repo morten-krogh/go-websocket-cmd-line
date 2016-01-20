@@ -2,7 +2,7 @@ package main
 
 import (
 //	"bufio"
-	"fmt"
+//	"fmt"
 	"golang.org/x/net/websocket"
 //	"log"
 //	"os"
@@ -17,7 +17,7 @@ func wsReaderServer(conn *websocket.Conn, c chan string) {
 	for {
 		n, err := conn.Read(buffer)
 		if err != nil {
-			fmt.Printf("Connection closed: %s\n", remoteAddr) 
+			closeChan <- remoteAddr
 			return
 		}
 

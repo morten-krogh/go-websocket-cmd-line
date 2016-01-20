@@ -8,41 +8,53 @@ import (
 	"log"
 	"net/http"
 	//	"os"
-	"time"
 )
 
-var wsReaderChan chan string = make(chan string)
-var wsWriterChan chan string = make(chan string)
+var readerChan chan string
+var closeChan chan string
+
+type writerInfo struct {
+	address  string
+	msgChan  chan string
+	doneChan chan bool
+}
+
+var writerInfoChan chan writerInfo 
 
 func handShake(config *websocket.Config, request *http.Request) error {
-	//fmt.Print("handshake\n")
 	return nil
 }
 
 func wsHandler(conn *websocket.Conn) {
 	remoteAddr := conn.Request().RemoteAddr
-	fmt.Printf("New connection: %s\n", remoteAddr)
 
-	go wsReaderServer(conn, wsReaderChan)
+	go wsReaderServer(conn, readerChan)
 
+	msgChan := make(chan string)
+	doneChan := make(chan bool)
+
+	writerInfoChan <- writerInfo{remoteAddr, msgChan, doneChan}
+	
 	for {
-		//fmt.Println(conn.IsServerConn())
 		select {
-		case msg := <- wsWriterChan:
-			_, err := conn.Write([]byte(msg))
-			if err != nil {
+		case msg := <-msgChan:
+			conn.Write([]byte(msg))
+		case done := <-doneChan:
+			if done {
 				return
 			}
-		case <-time.After(5 * time.Second):
 		}
 	}
 }
 
 func server(port string) {
-
+	readerChan = make(chan string)
+	closeChan = make(chan string)
+	writerInfoChan = make(chan writerInfo)
+	
 	stdinReaderChan := make(chan string)
 	go stdinReader(stdinReaderChan)
-	
+
 	var wsServer websocket.Server
 	wsServer.Handshake = handShake
 	//wsServer.Config
@@ -52,69 +64,33 @@ func server(port string) {
 	httpServer.Addr = ":" + port
 	httpServer.Handler = wsServer
 	go func() {
+		fmt.Printf("Web socket is listening on port %s\n", port)
 		err := httpServer.ListenAndServe()
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Web socket is listening on port %s\n", port)
 	}()
 
-	
-	
+	writerInfos := make(map[string]writerInfo)
+
 	for {
 		select {
-		case stdinMsg := <- stdinReaderChan:
-			fmt.Print("something\n")
-			stdinMsg = stdinMsg
-		case wsMsg := <- wsReaderChan:
-			fmt.Print(wsMsg)
-		}
-	}
-	
-	/*
-		origin := "http://localhost/"
-
-		config, err := websocket.NewConfig(wsUri, origin)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		ws, err := websocket.DialConfig(config)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-
-
-		typeMsg := "Type a message to send on the websocket and press return\n"
-
-		println(typeMsg)
-
-		wsReaderChan := make(chan []byte)
-
-		go wsReader(ws, wsReaderChan)
-
-		stdinReaderChan := make(chan string)
-
-		go stdinReader(stdinReaderChan)
-
-		for {
-			select {
-			case stdinMsg := <-stdinReaderChan:
-				_, err = ws.Write([]byte(stdinMsg))
-				if err != nil {
-					println("\nError sending message to the websocket server")
-				} else {
-					println("\nMessage sent to the websocket server")
-				}
-				println(typeMsg)
-			case wsMsg := <- wsReaderChan:
-				println("The server replied:\n ")
-				println(string(wsMsg))
-				println(typeMsg)
+		case stdinMsg := <-stdinReaderChan:
+			for _, writerInfo := range writerInfos {
+				writerInfo.msgChan <- stdinMsg
+			}
+		case writerInfo := <-writerInfoChan:
+			fmt.Printf("New connection: %s\n", writerInfo.address)
+			writerInfos[writerInfo.address] = writerInfo
+		case msg := <-readerChan:
+			fmt.Print(msg)
+		case msg := <-closeChan:
+			writerInfo, ok := writerInfos[msg]
+			if ok {
+				fmt.Printf("Connection closed: %s\n", writerInfo.address)
+				writerInfo.doneChan <- true
+				delete(writerInfos, msg)
 			}
 		}
-
-	*/
+	}
 }
