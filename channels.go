@@ -8,7 +8,7 @@ import (
 
 type wsMessage struct {
 	conn *websocket.Conn
-	msg []byte
+	bytes []byte
 }
 
 /* wsInfo is by readers and writers. 
@@ -23,15 +23,13 @@ type wsMessage struct {
 type wsInfo struct {
 	conn *websocket.Conn
 	messageChan chan wsMessage
-	closeChan chan bool
+	closeChan chan *websocket.Conn
 }
 
 /* Some channels are global. Others are created at connection accept.
  * The main goroutine selects for the global channels 
  */
 
-var globalMsgChan chan wsMessage
-var globalCloseChan chan bool
-var globalWriterChan chan wsInfo 
-
-
+var globalMessageChan chan wsMessage
+var globalCloseChan chan *websocket.Conn
+var globalConnChan chan *websocket.Conn

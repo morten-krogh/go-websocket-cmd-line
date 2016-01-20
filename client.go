@@ -10,44 +10,43 @@ import (
 func client(wsUri string) {
 
 	origin := "http://localhost/"
-
 	config, err := websocket.NewConfig(wsUri, origin)
-
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	ws, err := websocket.DialConfig(config)
+	conn, err := websocket.DialConfig(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Printf("The web socket is connected to %s\n", wsUri)
+	fmt.Printf("Messages typed on the command line will be sent to the websocket server\n")
+	fmt.Printf("A message is terminated by pressing the return key\n")
 
-	typeMsg := "Type a message to send on the websocket and press return\n"
+	readerMessageChan := make(chan wsMessage)
+	readerCloseChan := make(chan *websocket.Conn)
+	readerInfo := wsInfo{conn, readerMessageChan, readerCloseChan}
+	go reader(readerInfo)
 	
-	println(typeMsg)
+	writerMessageChan := make(chan wsMessage)
+	writerCloseChan := make(chan *websocket.Conn)
+	writerInfo := wsInfo{conn, writerMessageChan, writerCloseChan}
+	go writer(writerInfo)
 	
-	wsReaderChan := make(chan []byte)
-	go wsReaderClient(ws, wsReaderChan)
-
 	stdinReaderChan := make(chan string)
 	go stdinReader(stdinReaderChan)
 
 	for {
 		select {
-		case stdinMsg := <-stdinReaderChan:
-			_, err = ws.Write([]byte(stdinMsg))
-			if err != nil {
-				println("\nError sending message to the websocket server")
-				println(typeMsg)
-			} else {
-				println("\nMessage sent to the websocket server")
-			}
-		case wsMsg := <- wsReaderChan:
-			println("The server replied:\n ")
-			println(string(wsMsg))
-			println(typeMsg)
+		case stdinMessage := <-stdinReaderChan:
+			writerMessageChan <- wsMessage{conn, []byte(stdinMessage)}
+		case wsMessage := <- readerMessageChan:
+			output := "Server: " + string(wsMessage.bytes)
+			print(output)
+		case <- readerCloseChan:
+			output := "The server closed the connection"
+			println(output)
+			return
 		}
 	}
 }
