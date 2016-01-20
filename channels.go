@@ -30,4 +30,9 @@ type wsInfo struct {
 /* The globalConnChan is used to send the connection from the goroutine that is created at acceot to the main goroutine.
  * The main goroutine will distribute the connection to a reader and writer itself.
  */
-var globalConnChan chan *websocket.Conn
+type newConnInfo struct {
+	conn *websocket.Conn
+	wsInfoChan chan wsInfo
+}
+
+var globalConnChan chan newConnInfo

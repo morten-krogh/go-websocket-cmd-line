@@ -14,6 +14,7 @@ func reader(info wsInfo) {
 	for {
 		n, err := info.conn.Read(buffer)
 		if err != nil {
+			//log.Fatal(err)
 			info.closeChan <- info.conn
 			return
 		}
