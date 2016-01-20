@@ -3,11 +3,11 @@ package main
 import (
 //	"bufio"
 //	"fmt"
-	"golang.org/x/net/websocket"
+//	"golang.org/x/net/websocket"
 //	"log"
 //	"os"
 )
-
+/*
 func wsReaderServer(conn *websocket.Conn, c chan string) {
 	remoteAddr := conn.Request().RemoteAddr
 	remoteAddr = remoteAddr
@@ -25,3 +25,4 @@ func wsReaderServer(conn *websocket.Conn, c chan string) {
 		c <- msg
 	}
 }
+*/

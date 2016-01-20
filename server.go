@@ -10,6 +10,7 @@ import (
 	//	"os"
 )
 
+/*
 var readerChan chan string
 var closeChan chan string
 
@@ -24,8 +25,11 @@ var writerInfoChan chan writerInfo
 func handShake(config *websocket.Config, request *http.Request) error {
 	return nil
 }
+*/
 
 func wsHandler(conn *websocket.Conn) {
+	globalConnChan <- conn
+/*
 	remoteAddr := conn.Request().RemoteAddr
 
 	go wsReaderServer(conn, readerChan)
@@ -45,19 +49,13 @@ func wsHandler(conn *websocket.Conn) {
 			}
 		}
 	}
+*/
 }
 
 func server(port string) {
-	readerChan = make(chan string)
-	closeChan = make(chan string)
-	writerInfoChan = make(chan writerInfo)
-	
-	stdinReaderChan := make(chan string)
-	go stdinReader(stdinReaderChan)
 
 	var wsServer websocket.Server
-	wsServer.Handshake = handShake
-	//wsServer.Config
+	//wsServer.Handshake = handShake
 	wsServer.Handler = websocket.Handler(wsHandler)
 
 	var httpServer http.Server
@@ -71,26 +69,42 @@ func server(port string) {
 		}
 	}()
 
-	writerInfos := make(map[string]writerInfo)
+	stdinReaderChan := make(chan string)
+	go stdinReader(stdinReaderChan)
 
+	writerInfoMap := make(map[string]wsInfo)
+
+	readerMessageChan := make(chan wsMessage)
+	readerCloseChan := make(chan *websocket.Conn)
+	
 	for {
 		select {
+		case conn := <- globalConnChan:
+			readerInfo := wsInfo{conn, readerMessageChan, readerCloseChan}
+			go reader(readerInfo)
+
+			writerMessageChan := make(chan wsMessage)
+			writerCloseChan := make(chan *websocket.Conn)
+			writerInfo := wsInfo{conn, writerMessageChan, writerCloseChan}
+			go writer(writerInfo)
+
+			address := conn.RemoteAddr().String()
+			writerInfoMap[address] = writerInfo
+			fmt.Printf("New connection: %s\n", address)
 		case stdinMsg := <-stdinReaderChan:
-			for _, writerInfo := range writerInfos {
-				writerInfo.msgChan <- stdinMsg
+			for _, wsInfo := range writerInfoMap {
+				wsInfo.messageChan <- wsMessage{wsInfo.conn, []byte(stdinMsg)}
 			}
-		case writerInfo := <-writerInfoChan:
-			fmt.Printf("New connection: %s\n", writerInfo.address)
-			writerInfos[writerInfo.address] = writerInfo
-		case msg := <-readerChan:
-			fmt.Print(msg)
-		case msg := <-closeChan:
-			writerInfo, ok := writerInfos[msg]
-			if ok {
-				fmt.Printf("Connection closed: %s\n", writerInfo.address)
-				writerInfo.doneChan <- true
-				delete(writerInfos, msg)
-			}
+		case wsMessage := <-readerMessageChan:
+			address := wsMessage.conn.RemoteAddr().String()
+			output := address + ": " + string(wsMessage.bytes)
+			fmt.Print(output)
+		case conn := <-readerCloseChan:
+			address := conn.RemoteAddr().String()
+			writerInfo := writerInfoMap[address]
+			writerInfo.closeChan <- conn
+			delete(writerInfoMap, address)
+			fmt.Printf("Connection closed: %s\n", address)
 		}
 	}
 }

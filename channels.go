@@ -26,10 +26,8 @@ type wsInfo struct {
 	closeChan chan *websocket.Conn
 }
 
-/* Some channels are global. Others are created at connection accept.
- * The main goroutine selects for the global channels 
- */
 
-var globalMessageChan chan wsMessage
-var globalCloseChan chan *websocket.Conn
+/* The globalConnChan is used to send the connection from the goroutine that is created at acceot to the main goroutine.
+ * The main goroutine will distribute the connection to a reader and writer itself.
+ */
 var globalConnChan chan *websocket.Conn
