@@ -62,7 +62,6 @@ go install
 
 from within the gowebsock directory. The executable is located in the bin directory and can be copied to anywhere.
 
-```
 
 ## Purpose of Gowebsock 
 
