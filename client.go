@@ -18,9 +18,7 @@ func client(wsUri string) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("The web socket is connected to %s\n", wsUri)
-	fmt.Printf("Messages typed on the command line will be sent to the websocket server\n")
-	fmt.Printf("A message is terminated by pressing the return key\n")
+	fmt.Printf("The gowebsock client is connected to %s\n", wsUri)
 
 	readerMessageChan := make(chan wsMessage)
 	readerCloseChan := make(chan *websocket.Conn)

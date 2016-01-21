@@ -26,7 +26,7 @@ func server(port string) {
 	httpServer.Addr = ":" + port
 	httpServer.Handler = wsServer
 	go func() {
-		fmt.Printf("Web socket is listening on port %s\n", port)
+		fmt.Printf("The gowebsock server is listening on port %s\n", port)
 		err := httpServer.ListenAndServe()
 		if err != nil {
 			log.Fatal(err)
