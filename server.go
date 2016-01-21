@@ -5,29 +5,37 @@ import (
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
+	//	"crypto/tls"
 )
 
 func wsHandler(conn *websocket.Conn) {
 	wsInfoChan := make(chan wsInfo)
 	globalConnChan <- newConnInfo{conn, wsInfoChan}
 
-	wsInfo := <- wsInfoChan
+	wsInfo := <-wsInfoChan
 
 	writer(wsInfo)
 }
 
-func server(port string) {
+func server(port string, certFile string, keyFile string) {
 	globalConnChan = make(chan newConnInfo)
-	
+
 	var wsServer websocket.Server
 	wsServer.Handler = websocket.Handler(wsHandler)
 
 	var httpServer http.Server
 	httpServer.Addr = ":" + port
 	httpServer.Handler = wsServer
+
 	go func() {
-		fmt.Printf("The gowebsock server is listening on port %s\n", port)
-		err := httpServer.ListenAndServe()
+		var err error
+		if certFile == "" {
+			fmt.Printf("The gowebsock server is listening on port %s\n", port)
+			err = httpServer.ListenAndServe()
+		} else {
+			fmt.Printf("The gowebsock server is listening on port %s using TLS\n", port)
+			err = httpServer.ListenAndServeTLS(certFile, keyFile)
+		}
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -40,13 +48,13 @@ func server(port string) {
 
 	readerMessageChan := make(chan wsMessage)
 	readerCloseChan := make(chan *websocket.Conn)
-	
+
 	for {
 		select {
-		case newConnInfo := <- globalConnChan:
+		case newConnInfo := <-globalConnChan:
 			conn := newConnInfo.conn
 			wsInfoChan := newConnInfo.wsInfoChan
-			
+
 			readerInfo := wsInfo{conn, readerMessageChan, readerCloseChan}
 			go reader(readerInfo)
 

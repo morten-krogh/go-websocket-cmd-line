@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"golang.org/x/net/websocket"
 	"log"
+	"crypto/tls"
 )
 
 func client(wsUri string) {
@@ -13,6 +14,11 @@ func client(wsUri string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	tlsConfig := tls.Config{}
+	tlsConfig.InsecureSkipVerify = true 
+	config.TlsConfig = &tlsConfig
+
 	conn, err := websocket.DialConfig(config)
 	if err != nil {
 		log.Fatal(err)

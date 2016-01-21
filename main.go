@@ -23,7 +23,11 @@ func main() {
 		client(wsUri)
 	case "server":
 		port := os.Args[2]
-		server(port)
+
+		certFile := "/Users/mkrogh/go/src/github.com/morten-krogh/gowebsock/cert/localhost.crt"
+		keyFile := "/Users/mkrogh/go/src/github.com/morten-krogh/gowebsock/cert/localhost.key"
+		
+		server(port, certFile, keyFile)
 	default:
 		printUsage()
 		os.Exit(1)
