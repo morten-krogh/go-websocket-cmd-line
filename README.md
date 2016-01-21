@@ -2,7 +2,7 @@
 
 ## Command line program
 
-Gowebsock is a command line program for websocket client and server. Gowebsock is written in the go language.
+Gowebsock is a command line program for websocket clients and servers. Gowebsock is written in the go language.
 
 ## Usage
 
@@ -79,23 +79,23 @@ Gowebsock is built using the standard Go websocket package "golang.org/x/net/web
 A Gowebsock program has one master goroutine, one goroutine for reading from stdin, one reader goroutine for each open websocket, and one writer goroutine for each open websocket. The master goroutine coordinates everything and all communication goes through the master. For the server, there is also a goroutine that listens for new connections.
 
 ##### Reader goroutine
-A reader goroutine blocks on reading from its websocket. When a message has arrived, the message and the address of the socket is sent to the master goroutine through a global channel. If the websocket cnnection is closed by the remote end, the reader notices and sends the close signal to the master thorugh another global channel.
+A reader goroutine blocks on reading from its websocket. When a message has arrived, the message and the address of the socket is sent to the master goroutine through a global channel. If the websocket connection is closed by the remote end, the reader notices and sends the close signal to the master through another global channel.
 
 ##### Stdin goroutine
-The stdin goroutine reads from the terminal and sends the message to the master thorugh a dedicated channel.
+The stdin goroutine reads from the terminal and sends the message to the master through a dedicated channel.
 
 ##### Listener goroutine
-The listener, in case of the server, is a special goroutine that accets new websocket connections and creates a new goroutine for each connection. The new goroutine becomes a writer.
+The listener, in case of the server, is a special goroutine that accepts new websocket connections and creates a new goroutine for each connection. The new goroutine becomes a writer.
 
 ##### Writer goroutine
-A writer goroutine is created at connection acceptance. The writer tells the master that it has been created thorugh a global channel. The writer also creates a new channel that it sends to the master. The master will send messages to thw writer through this new channel in the future. The master tells the writer to write on its websocket and to terminate itself when the websocket has been closed.
+A writer goroutine is created at connection acceptance. The writer tells the master that it has been created through a global channel. The writer also creates a new channel that it sends to the master. The master will send messages to the writer through this new channel in the future. The master tells the writer to write on its websocket and to terminate itself when the websocket has been closed.
 
 ##### Master goroutine
 The master coordinates everything. It keeps a map of all open web sockets and channels to the writers. The master blocks on a channel select where it waits for new connections, reader messages, stdin messages, and closing of connections. The server sends stdin messages to all connected websockets.  
 
 ## Transport layer security
 
-Gowebsocket servers and clients can use encrypted connections using TLS. The client specifies a uri starting with "wss://" instead of "ws://". The server must be started with a certificate and a private key.
+Gowebsock servers and clients can use encrypted connections using TLS. The client specifies a uri starting with "wss://" instead of "ws://". The server must be started with a certificate and a private key.
 The gowebsock repository includes an example certificate and key in the directory cert.
 
 
