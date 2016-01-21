@@ -10,12 +10,13 @@ Gowebsock is a command line program for websocket client and server. Gowebsock i
 Usage
   gowebsock client <web-socket-uri>
   gowebsock server <port>
+  gowebsock server <port> <cert-file> <key-file>
   
 ```
 
 Websocket messages are typed at the terminal prompt. At the press of the return key, the message is sent on the websocket. The incoming messages are written to the terminal. Messages typed into the server terminal are sent to all connected clients.
 
-### Example server and two clients
+## Example with a server and two clients
 
 ##### Server
 ```
@@ -62,7 +63,6 @@ go install
 
 from within the gowebsock directory. The executable is located in the bin directory and can be copied to anywhere.
 
-
 ## Purpose of Gowebsock 
 
 
@@ -92,3 +92,29 @@ A writer goroutine is created at connection acceptance. The writer tells the mas
 
 ##### Master goroutine
 The master coordinates everything. It keeps a map of all open web sockets and channels to the writers. The master blocks on a channel select where it waits for new connections, reader messages, stdin messages, and closing of connections. The server sends stdin messages to all connected websockets.  
+
+## Transport layer security
+
+Gowebsocket servers and clients can use encrypted connections using TLS. The client specifies a uri starting with "wss://" instead of "ws://". The server must be started with a certificate and a private key.
+The gowebsock repository includes an example certificate and key in the directory cert.
+
+
+## Example with a TLS server and a client
+
+##### server
+```
+~/go> bin/gowebsock server 9000 src/github.com/morten-krogh/gowebsock/cert/localhost.crt src/github.com/morten-krogh/gowebsock/cert/localhost.key 
+The gowebsock server is listening on port 9000 using TLS
+New connection: 127.0.0.1:49817
+127.0.0.1:49817: Hello TLS server!
+Hi TLS client
+```
+
+##### client
+```
+~/go> bin/gowebsock client wss://127.0.0.1:9000
+The gowebsock client is connected to wss://127.0.0.1:9000
+Hello TLS server!
+Server: Hi TLS client
+The server closed the connection
+```
