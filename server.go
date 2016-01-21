@@ -5,7 +5,6 @@ import (
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
-	//	"crypto/tls"
 )
 
 func wsHandler(conn *websocket.Conn) {
