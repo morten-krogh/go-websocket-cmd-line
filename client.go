@@ -44,7 +44,7 @@ func client(wsUri string) {
 		case stdinMessage := <-stdinReaderChan:
 			writerMessageChan <- wsMessage{conn, []byte(stdinMessage)}
 		case wsMessage := <- readerMessageChan:
-			output := "Server: " + string(wsMessage.bytes)
+			output := "Server: " + string(wsMessage.bytes) + "\n"
 			print(output)
 		case <- readerCloseChan:
 			output := "The server closed the connection"
