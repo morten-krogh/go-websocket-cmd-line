@@ -71,7 +71,7 @@ func server(port string, certFile string, keyFile string) {
 			}
 		case wsMessage := <-readerMessageChan:
 			address := wsMessage.conn.Request().RemoteAddr
-			output := address + ": " + string(wsMessage.bytes)
+			output := address + ": " + string(wsMessage.bytes) + "\n" 
 			fmt.Print(output)
 		case conn := <-readerCloseChan:
 			address := conn.Request().RemoteAddr

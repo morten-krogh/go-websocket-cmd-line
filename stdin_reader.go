@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"strings"
 )
 
 func stdinReader(inputChan chan string) {
@@ -16,6 +17,7 @@ func stdinReader(inputChan chan string) {
 			log.Fatal(err)
 		}
 
+		line = strings.TrimSuffix(line, "\n")
 		inputChan <- line
 	}
 }
