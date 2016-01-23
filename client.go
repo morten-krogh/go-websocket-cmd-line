@@ -1,25 +1,21 @@
 package main
 
 import (
+	"net/http"
 	"crypto/tls"
 	"fmt"
-	"golang.org/x/net/websocket"
 	"log"
+	"github.com/gorilla/websocket"
 )
 
 func client(wsUri string) {
 
-	origin := "http://localhost/"
-	config, err := websocket.NewConfig(wsUri, origin)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	tlsConfig := tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
-	config.TlsConfig = &tlsConfig
-
-	conn, err := websocket.DialConfig(config)
+	dialer := websocket.Dialer{TLSClientConfig: &tlsConfig}
+	requestHeader := http.Header{}
+	requestHeader.Set("origin", "http://localhost/")
+	conn, _, err := dialer.Dial(wsUri, requestHeader)
 	if err != nil {
 		log.Fatal(err)
 	}

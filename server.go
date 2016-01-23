@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"golang.org/x/net/websocket"
-	"log"
-	"net/http"
+//	"fmt"
+//	"log"
+//	"net/http"
+	"github.com/gorilla/websocket"
 )
 
 func wsHandler(conn *websocket.Conn) {
@@ -19,6 +19,7 @@ func wsHandler(conn *websocket.Conn) {
 func server(port string, certFile string, keyFile string) {
 	globalConnChan = make(chan newConnInfo)
 
+	/*
 	var wsServer websocket.Server
 	wsServer.Handler = websocket.Handler(wsHandler)
 
@@ -81,4 +82,5 @@ func server(port string, certFile string, keyFile string) {
 			fmt.Printf("Connection closed: %s\n", address)
 		}
 	}
+*/
 }

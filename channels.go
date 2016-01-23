@@ -1,7 +1,7 @@
 package main
 
 import (
-	"golang.org/x/net/websocket"
+	"github.com/gorilla/websocket"
 )
 
 /* wsMessage is sent on channels. It contains the message and a pointer to the connection */
