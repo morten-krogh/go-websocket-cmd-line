@@ -6,7 +6,7 @@ import (
 )
 
 func printUsage() {
-	usageFormatString := "Usage\n  %s client <web-socket-uri>\n  %s server <port>\n  %s server <port> <cert-file> <key-file>\n" 
+	usageFormatString := "Usage\n  %s client <web-socket-uri>\n  %s server <port>\n  %s server <port> <cert-file> <key-file>\n"
 	fmt.Printf(usageFormatString, os.Args[0], os.Args[0], os.Args[0])
 }
 

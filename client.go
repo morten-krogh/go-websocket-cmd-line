@@ -1,10 +1,10 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"log"
-	"crypto/tls"
 )
 
 func client(wsUri string) {
@@ -16,7 +16,7 @@ func client(wsUri string) {
 	}
 
 	tlsConfig := tls.Config{}
-	tlsConfig.InsecureSkipVerify = true 
+	tlsConfig.InsecureSkipVerify = true
 	config.TlsConfig = &tlsConfig
 
 	conn, err := websocket.DialConfig(config)
@@ -30,12 +30,12 @@ func client(wsUri string) {
 	readerCloseChan := make(chan *websocket.Conn)
 	readerInfo := wsInfo{conn, readerMessageChan, readerCloseChan}
 	go reader(readerInfo)
-	
+
 	writerMessageChan := make(chan wsMessage)
 	writerCloseChan := make(chan *websocket.Conn)
 	writerInfo := wsInfo{conn, writerMessageChan, writerCloseChan}
 	go writer(writerInfo)
-	
+
 	stdinReaderChan := make(chan string)
 	go stdinReader(stdinReaderChan)
 
@@ -43,10 +43,10 @@ func client(wsUri string) {
 		select {
 		case stdinMessage := <-stdinReaderChan:
 			writerMessageChan <- wsMessage{conn, []byte(stdinMessage)}
-		case wsMessage := <- readerMessageChan:
+		case wsMessage := <-readerMessageChan:
 			output := "Server: " + string(wsMessage.bytes) + "\n"
 			print(output)
-		case <- readerCloseChan:
+		case <-readerCloseChan:
 			output := "The server closed the connection"
 			println(output)
 			return
