@@ -1,20 +1,17 @@
 package main
 
-import "fmt"
+import "github.com/gorilla/websocket"
 
-func reader(info wsInfo) {
+func reader(conn *websocket.Conn, ch chan readResult) {
 	for {
 		for {
-			messageType, p, err := info.conn.ReadMessage()
+			msgType, data, err := conn.ReadMessage()
+			messageType := messageType (msgType)
+			readResult := readResult{conn, messageType, data, err}
+			ch <- readResult
 			if err != nil {
-				fmt.Printf("error = %s\n", err)
-				info.closeChan <- info.conn
 				return
 			}
-
-			messageType = messageType
-			
-			info.messageChan <- wsMessage{info.conn, p}
 		}
 	}
 }

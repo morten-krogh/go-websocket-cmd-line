@@ -4,6 +4,18 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+/*    */
+
+type readResult struct {
+	conn        *websocket.Conn
+	messageType messageType
+	data []byte
+	err error
+}
+
+//type 
+
+
 /* wsMessage is sent on channels. It contains the message and a pointer to the connection */
 
 type wsMessage struct {
@@ -12,7 +24,7 @@ type wsMessage struct {
 }
 
 /* wsInfo is by readers and writers.
- * A Reader readS messages from the blocking connection
+ * A Reader reads messages from the blocking connection
  * and sends the messages to the messageChan. When a reader sees the remote closing of the
  * connection, it signals true on the closeChan.
  *

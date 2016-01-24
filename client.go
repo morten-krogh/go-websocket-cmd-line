@@ -1,11 +1,11 @@
 package main
 
 import (
-	"net/http"
 	"crypto/tls"
 	"fmt"
-	"log"
 	"github.com/gorilla/websocket"
+	"log"
+	"net/http"
 )
 
 func client(wsUri string) {
@@ -22,10 +22,8 @@ func client(wsUri string) {
 
 	fmt.Printf("The gowebsock client is connected to %s\n", wsUri)
 
-	readerMessageChan := make(chan wsMessage)
-	readerCloseChan := make(chan *websocket.Conn)
-	readerInfo := wsInfo{conn, readerMessageChan, readerCloseChan}
-	go reader(readerInfo)
+	readResultChan := make(chan readResult)
+	go reader(conn, readResultChan)
 
 	writerMessageChan := make(chan wsMessage)
 	writerCloseChan := make(chan *websocket.Conn)
@@ -39,13 +37,13 @@ func client(wsUri string) {
 		select {
 		case stdinMessage := <-stdinReaderChan:
 			writerMessageChan <- wsMessage{conn, []byte(stdinMessage)}
-		case wsMessage := <-readerMessageChan:
-			output := "Server: " + string(wsMessage.bytes) + "\n"
-			print(output)
-		case <-readerCloseChan:
-			output := "The server closed the connection"
-			println(output)
-			return
+		case readResult := <-readResultChan:
+			if readResult.err == nil {
+				output := "Server: type = " + string(readResult.messageType.string()) + ", data = " + string(readResult.data) + "\n"
+				fmt.Printf(output)
+			} else {
+				fmt.Printf("%s\n", readResult.err)
+			}
 		}
 	}
 }
