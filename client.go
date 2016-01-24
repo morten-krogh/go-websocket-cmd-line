@@ -9,6 +9,9 @@ import (
 	"os"
 )
 
+/* The client dials a connection to wsUri. The client starts a reader, a writer, and a standardInput reader.
+ * Standard in is sent to the writer that will send it on the connection. The readerResult is printed to standard out.
+ */
 func client(wsUri string) {
 
 	tlsConfig := tls.Config{}

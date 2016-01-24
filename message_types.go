@@ -1,5 +1,6 @@
 package main
 
+/* a textual representation of the websocket message types */
 func messageTypeString(messageType int) string {
 	switch messageType {
 	case 1:

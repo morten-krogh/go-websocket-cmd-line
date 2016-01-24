@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+/* stdinReader reads input from stdin and sends it to the master */
 func stdinReader(inputChan chan string) {
 
 	inputReader := bufio.NewReader(os.Stdin)

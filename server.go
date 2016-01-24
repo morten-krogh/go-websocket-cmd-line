@@ -7,6 +7,11 @@ import (
 	"net/http"
 )
 
+/* The server starts a server at port. The server creates a stdinReader goroutine. The server keeps a map of all open
+ * connections. The values in the map contains channels to communicate with the writers.
+ * The server is the controller, or master, of the running server program.
+ */
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
