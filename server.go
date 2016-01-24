@@ -1,31 +1,37 @@
 package main
 
 import (
-//	"fmt"
-//	"log"
-//	"net/http"
+	"fmt"
+	"log"
+	"net/http"
 	"github.com/gorilla/websocket"
 )
 
-func wsHandler(conn *websocket.Conn) {
-	wsInfoChan := make(chan wsInfo)
-	globalConnChan <- newConnInfo{conn, wsInfoChan}
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {return true},
+}
 
-//	wsInfo := <-wsInfoChan
+func serverHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		return
+	}
 
-//	writer(wsInfo)
+	writerCommandChan := make(chan writerCommand)
+	writerInitChan <- writerInit{conn, writerCommandChan}
+	writer(conn, writerCommandChan)
+
 }
 
 func server(port string, certFile string, keyFile string) {
-	globalConnChan = make(chan newConnInfo)
-
-	/*
-	var wsServer websocket.Server
-	wsServer.Handler = websocket.Handler(wsHandler)
+	writerInitChan = make(chan writerInit)
 
 	var httpServer http.Server
 	httpServer.Addr = ":" + port
-	httpServer.Handler = wsServer
+	httpServer.Handler = http.HandlerFunc(serverHandler)
 
 	go func() {
 		var err error
@@ -44,43 +50,44 @@ func server(port string, certFile string, keyFile string) {
 	stdinReaderChan := make(chan string)
 	go stdinReader(stdinReaderChan)
 
-	writerInfoMap := make(map[string]wsInfo)
+	writerMap := make(map[string]writerInit)
 
-	readerMessageChan := make(chan wsMessage)
-	readerCloseChan := make(chan *websocket.Conn)
+	readerResultChan := make(chan readerResult)
 
 	for {
 		select {
-		case newConnInfo := <-globalConnChan:
-			conn := newConnInfo.conn
+		case writerInit := <- writerInitChan:
+			conn := writerInit.conn
+			go reader(conn, readerResultChan)
+			
+			address := conn.RemoteAddr().String()
+			writerMap[address] = writerInit
+			fmt.Printf("New connection: %s\n", address)
+
+/*
 			wsInfoChan := newConnInfo.wsInfoChan
-
-			readerInfo := wsInfo{conn, readerMessageChan, readerCloseChan}
-			go reader(readerInfo)
-
 			writerMessageChan := make(chan wsMessage)
 			writerCloseChan := make(chan *websocket.Conn)
 			writerInfo := wsInfo{conn, writerMessageChan, writerCloseChan}
 			wsInfoChan <- writerInfo
-
-			address := conn.Request().RemoteAddr
-			writerInfoMap[address] = writerInfo
-			fmt.Printf("New connection: %s\n", address)
+*/
+			
 		case stdinMsg := <-stdinReaderChan:
-			for _, wsInfo := range writerInfoMap {
-				wsInfo.messageChan <- wsMessage{wsInfo.conn, []byte(stdinMsg)}
+			for _, writerInit := range writerMap {
+				writerInit.writerCommandChan <- writerCommand{false, 1, []byte(stdinMsg)}
 			}
-		case wsMessage := <-readerMessageChan:
-			address := wsMessage.conn.Request().RemoteAddr
-			output := address + ": " + string(wsMessage.bytes) + "\n"
+		case readerResult := <-readerResultChan:
+			address := readerResult.conn.RemoteAddr().String()
+			output := address + ": " + string(readerResult.data) + "\n"
 			fmt.Print(output)
+/*
 		case conn := <-readerCloseChan:
 			address := conn.Request().RemoteAddr
 			writerInfo := writerInfoMap[address]
 			writerInfo.closeChan <- conn
 			delete(writerInfoMap, address)
 			fmt.Printf("Connection closed: %s\n", address)
+*/
 		}
 	}
-*/
 }
