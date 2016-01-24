@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {return true},
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 func serverHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,38 +56,51 @@ func server(port string, certFile string, keyFile string) {
 
 	for {
 		select {
-		case writerInit := <- writerInitChan:
+		case writerInit := <-writerInitChan:
 			conn := writerInit.conn
 			go reader(conn, readerResultChan)
-			
+
 			address := conn.RemoteAddr().String()
 			writerMap[address] = writerInit
 			fmt.Printf("New connection: %s\n", address)
 
-/*
-			wsInfoChan := newConnInfo.wsInfoChan
-			writerMessageChan := make(chan wsMessage)
-			writerCloseChan := make(chan *websocket.Conn)
-			writerInfo := wsInfo{conn, writerMessageChan, writerCloseChan}
-			wsInfoChan <- writerInfo
-*/
-			
-		case stdinMsg := <-stdinReaderChan:
+			/*
+				wsInfoChan := newConnInfo.wsInfoChan
+				writerMessageChan := make(chan wsMessage)
+				writerCloseChan := make(chan *websocket.Conn)
+				writerInfo := wsInfo{conn, writerMessageChan, writerCloseChan}
+				wsInfoChan <- writerInfo
+			*/
+
+		case stdinMessage := <-stdinReaderChan:
+			log.Printf("writerMap %d\n", len(writerMap))
+			var messageType int
+			data := ""
+			switch stdinMessage {
+			case "close":
+				messageType = 8
+			case "ping":
+				messageType = 9
+			case "pong":
+				messageType = 10
+			default:
+				messageType = 1
+				data = stdinMessage
+			}
 			for _, writerInit := range writerMap {
-				writerInit.writerCommandChan <- writerCommand{false, 1, []byte(stdinMsg)}
+				writerInit.writerCommandChan <- writerCommand{false, messageType, []byte(data)}
 			}
 		case readerResult := <-readerResultChan:
 			address := readerResult.conn.RemoteAddr().String()
-			output := address + ": " + string(readerResult.data) + "\n"
-			fmt.Print(output)
-/*
-		case conn := <-readerCloseChan:
-			address := conn.Request().RemoteAddr
-			writerInfo := writerInfoMap[address]
-			writerInfo.closeChan <- conn
-			delete(writerInfoMap, address)
-			fmt.Printf("Connection closed: %s\n", address)
-*/
+			if readerResult.err == nil {
+				output := address + ": type = " + messageTypeString(readerResult.messageType) + ", data = " + string(readerResult.data) + "\n"
+				fmt.Printf(output)
+			} else {
+				writerInit := writerMap[address]
+				writerInit.writerCommandChan <- writerCommand{true, 0, nil}
+				delete(writerMap, address)
+				fmt.Printf("%s: %s\n", address, readerResult.err)
+			}
 		}
 	}
 }

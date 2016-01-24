@@ -23,8 +23,8 @@ func client(wsUri string) {
 
 	fmt.Printf("The gowebsock client is connected to %s\n", wsUri)
 
-	readResultChan := make(chan readerResult)
-	go reader(conn, readResultChan)
+	readerResultChan := make(chan readerResult)
+	go reader(conn, readerResultChan)
 
 	writerCommandChan := make(chan writerCommand)
 	go writer(conn, writerCommandChan)
@@ -49,12 +49,12 @@ func client(wsUri string) {
 				data = stdinMessage
 			}
 			writerCommandChan <- writerCommand{false, messageType, []byte(data)}
-		case readResult := <-readResultChan:
-			if readResult.err == nil {
-				output := "Server: type = " + messageTypeString(readResult.messageType) + ", data = " + string(readResult.data) + "\n"
+		case readerResult := <-readerResultChan:
+			if readerResult.err == nil {
+				output := "Server: type = " + messageTypeString(readerResult.messageType) + ", data = " + string(readerResult.data) + "\n"
 				fmt.Printf(output)
 			} else {
-				fmt.Printf("%s\n", readResult.err)
+				fmt.Printf("%s\n", readerResult.err)
 				os.Exit(0)
 			}
 		}
