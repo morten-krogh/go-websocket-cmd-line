@@ -11,9 +11,9 @@ func wsHandler(conn *websocket.Conn) {
 	wsInfoChan := make(chan wsInfo)
 	globalConnChan <- newConnInfo{conn, wsInfoChan}
 
-	wsInfo := <-wsInfoChan
+//	wsInfo := <-wsInfoChan
 
-	writer(wsInfo)
+//	writer(wsInfo)
 }
 
 func server(port string, certFile string, keyFile string) {

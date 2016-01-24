@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"os"
 )
 
 func client(wsUri string) {
@@ -22,13 +23,11 @@ func client(wsUri string) {
 
 	fmt.Printf("The gowebsock client is connected to %s\n", wsUri)
 
-	readResultChan := make(chan readResult)
+	readResultChan := make(chan readerResult)
 	go reader(conn, readResultChan)
 
-	writerMessageChan := make(chan wsMessage)
-	writerCloseChan := make(chan *websocket.Conn)
-	writerInfo := wsInfo{conn, writerMessageChan, writerCloseChan}
-	go writer(writerInfo)
+	writerCommandChan := make(chan writerCommand)
+	go writer(conn, writerCommandChan)
 
 	stdinReaderChan := make(chan string)
 	go stdinReader(stdinReaderChan)
@@ -36,13 +35,27 @@ func client(wsUri string) {
 	for {
 		select {
 		case stdinMessage := <-stdinReaderChan:
-			writerMessageChan <- wsMessage{conn, []byte(stdinMessage)}
+			var messageType int
+			data := ""
+			switch stdinMessage {
+			case "close":
+				messageType = 8
+			case "ping":
+				messageType = 9
+			case "pong":
+				messageType = 10
+			default:
+				messageType = 1
+				data = stdinMessage
+			}
+			writerCommandChan <- writerCommand{false, messageType, []byte(data)}
 		case readResult := <-readResultChan:
 			if readResult.err == nil {
-				output := "Server: type = " + string(readResult.messageType.string()) + ", data = " + string(readResult.data) + "\n"
+				output := "Server: type = " + messageTypeString(readResult.messageType) + ", data = " + string(readResult.data) + "\n"
 				fmt.Printf(output)
 			} else {
 				fmt.Printf("%s\n", readResult.err)
+				os.Exit(0)
 			}
 		}
 	}

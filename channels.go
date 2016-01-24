@@ -6,12 +6,26 @@ import (
 
 /*    */
 
-type readResult struct {
+type readerResult struct {
 	conn        *websocket.Conn
-	messageType messageType
+	messageType int
 	data []byte
 	err error
 }
+
+type writerCommand struct {
+	close bool
+	messageType int
+	data []byte
+}
+
+type writerInit struct {
+	conn *websocket.Conn
+	writerCommandChan chan writerCommand
+}
+
+var writerInitChan chan writerInit
+
 
 //type 
 

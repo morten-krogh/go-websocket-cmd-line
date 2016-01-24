@@ -1,10 +1,7 @@
 package main
 
-type messageType int
-
-func (m messageType) string() string {
-
-	switch m {
+func messageTypeString(messageType int) string {
+	switch messageType {
 	case 1:
 		return "TextMessage"
 	case 2:
