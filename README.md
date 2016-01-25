@@ -94,9 +94,9 @@ Likewise, but less common, a client implementation can be tested by having the c
 
 ## Internal architecture of Gowebsock
 
-Gowebsock is built using the standard Go websocket package "github.com/gorilla/websocket". New websocket connections are created in their own goroutine. Reading from a websocket is a blocking operation. When a user types a message, the message must be sent on the sockets. It is not possible for one goroutine to be blocked on reading and at the same time write to the socket. The simplest solution, and the one employed by Gowebsock, is to have one goroutine for reading and one for writing. 
+Gowebsock is built using the websocket package "github.com/gorilla/websocket". New websocket connections are created in their own goroutine by the standard Go http mechanism. Reading from a websocket is a blocking operation. However, when a user types a message, the message must be sent on the sockets. It is not possible for one goroutine to be blocked on reading and at the same time write to the socket. The simplest solution, and the one employed by Gowebsock, is to have one goroutine for reading and one for writing for each socket. 
 
-A Gowebsock program has one master goroutine, one goroutine for reading from stdin, one reader goroutine for each open websocket, and one writer goroutine for each open websocket. The master goroutine coordinates everything and all communication goes through the master. For the server, there is also a goroutine that listens for new connections.
+A Gowebsock program has one master goroutine, one goroutine for reading from stdin, one reader goroutine for each open websocket, and one writer goroutine for each open websocket. The master goroutine coordinates everything and all communication goes through the master via channels. For the server, there is also a goroutine that listens for new connections.
 
 ##### Reader goroutine
 A reader goroutine blocks on reading from its websocket. When a message has arrived, the message and the address of the socket is sent to the master goroutine through a global channel. If the websocket connection is closed by the remote end, the reader notices and sends the close signal to the master through the same channel.
