@@ -68,15 +68,6 @@ func server(port string, certFile string, keyFile string) {
 			address := conn.RemoteAddr().String()
 			writerMap[address] = writerInit
 			fmt.Printf("New connection: %s\n", address)
-
-			/*
-				wsInfoChan := newConnInfo.wsInfoChan
-				writerMessageChan := make(chan wsMessage)
-				writerCloseChan := make(chan *websocket.Conn)
-				writerInfo := wsInfo{conn, writerMessageChan, writerCloseChan}
-				wsInfoChan <- writerInfo
-			*/
-
 		case stdinMessage := <-stdinReaderChan:
 			log.Printf("writerMap %d\n", len(writerMap))
 			var messageType int
