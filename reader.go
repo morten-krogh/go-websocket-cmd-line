@@ -2,11 +2,6 @@ package main
 
 import "github.com/gorilla/websocket"
 
-func pongHandler(appData string) error {
-
-	return nil
-}
-
 /* reader reads input from the web socket connection and sends it to the master.
  * reader runs in its own goroutine.
  * If the connection closes, the reader goroutine terminates.
@@ -23,13 +18,11 @@ func reader(conn *websocket.Conn, ch chan readerResult) {
 	})
 
 	for {
-		for {
-			messageType, data, err := conn.ReadMessage()
-			readerResult := readerResult{conn, messageType, data, err}
-			ch <- readerResult
-			if err != nil {
-				return
-			}
+		messageType, data, err := conn.ReadMessage()
+		readerResult := readerResult{conn, messageType, data, err}
+		ch <- readerResult
+		if err != nil {
+			return
 		}
 	}
 }
