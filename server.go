@@ -69,7 +69,6 @@ func server(port string, certFile string, keyFile string) {
 			writerMap[address] = writerInit
 			fmt.Printf("New connection: %s\n", address)
 		case stdinMessage := <-stdinReaderChan:
-			log.Printf("writerMap %d\n", len(writerMap))
 			var messageType int
 			data := ""
 			switch stdinMessage {
